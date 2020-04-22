@@ -4,12 +4,12 @@
 <text class="title-content">上传带有人像的照片，智能裁剪可以防止人像被切
 割，从而获得更好的缩略图体验</text>
 <view  class="origin-photo">
-<image src="/images/origin.png"></image>
+<image src="{{originUrl}}"></image>
 </view>
 <view class="cutted-photo">
-<image class="left-photo" src="/images/50x50.png" ></image>
-<image class="center-photo" src="/images/150x100.png"></image>
-<image class="right-photo" src="/images/80x45.png"></image>
+<image class="left-photo" src="{{resUrl.cut50}}" ></image>
+<image class="center-photo" src="{{resUrl.cut150}}"></image>
+<image class="right-photo" src="{{resUrl.cut80}}"></image>
 </view>
 
 <view class="botton-content">

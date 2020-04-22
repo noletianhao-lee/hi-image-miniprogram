@@ -1,80 +1,25 @@
-//home.js
 const app = getApp()
 
 Page({
   data: {
-    avatarUrl: './user-unlogin.png',
-    userInfo: {},
-    logged: false,
-    takeSession: false,
-    requestResult: ''
-  },
-
-  onLoad: function () {
-    if (!wx.cloud) {
-      wx.redirectTo({
-        url: '../chooseLib/chooseLib',
-      })
-      return
+    originUrl: "../../images/origin.png",
+    resUrl: {
+      cut50: "../../images/50x50.png",
+      cut80: "../../images/80x45.png",
+      cut150: "../../images/150x100.png"
     }
-
-    // 获取用户信息
-    wx.getSetting({
-      success: res => {
-        if (res.authSetting['scope.userInfo']) {
-          // 已经授权，可以直接调用 getUserInfo 获取头像昵称，不会弹框
-          wx.getUserInfo({
-            success: res => {
-              this.setData({
-                avatarUrl: res.userInfo.avatarUrl,
-                userInfo: res.userInfo
-              })
-            }
-          })
-        }
-      }
-    })
-  },
-
-  onGetUserInfo: function (e) {
-    if (!this.data.logged && e.detail.userInfo) {
-      this.setData({
-        logged: true,
-        avatarUrl: e.detail.userInfo.avatarUrl,
-        userInfo: e.detail.userInfo
-      })
-    }
-  },
-
-  onGetOpenid: function () {
-    // 调用云函数
-    wx.cloud.callFunction({
-      name: 'login',
-      data: {},
-      success: res => {
-        console.log('[云函数] [login] user openid: ', res.result.openid)
-        app.globalData.openid = res.result.openid
-        wx.navigateTo({
-          url: '../userConsole/userConsole',
-        })
-      },
-      fail: err => {
-        console.error('[云函数] [login] 调用失败', err)
-        wx.navigateTo({
-          url: '../deployFunctions/deployFunctions',
-        })
-      }
-    })
   },
 
   // 上传图片
   doUpload: function () {
+    let self = this
     // 选择图片
     wx.chooseImage({
       count: 1,
       sizeType: ['compressed'],
       sourceType: ['album', 'camera'],
       success: function (res) {
+
         wx.showLoading({
           title: '上传中',
         })
@@ -87,14 +32,61 @@ Page({
           cloudPath,
           filePath,
           success: res => {
-            console.log('[上传文件] 成功：', res)
+            // console.log('[上传文件] 成功：', res)
 
-            app.globalData.fileID = res.fileID
-            app.globalData.cloudPath = cloudPath
-            app.globalData.imagePath = filePath
-
-            wx.navigateTo({
-              url: '../storageConsole/storageConsole'
+            const fileID = res.fileID
+            // 图片上传成功后调用审查 
+            wx.cloud.callFunction({
+              name: "Ai-check",
+              data: {
+                fileID
+              },
+            }).then(({
+              result
+            }) => {
+              const {
+                PoliticsInfo,
+                PornInfo,
+                TerroristInfo
+              } = result
+              if (PoliticsInfo.Code == 0 && PornInfo.Code == 0 && TerroristInfo.Code == 0) {
+                wx.cloud.callFunction({
+                  name: "Ai-cut",
+                  data: {
+                    fileID,
+                    size: [{
+                      width: 100,
+                      height: 100
+                    },
+                    {
+                      width: 160,
+                      height: 90
+                    },
+                    {
+                      width: 300,
+                      height: 200
+                    }
+                    ]
+                  }
+                })
+                  .then(({
+                    result
+                  }) => {
+                    self.setData({
+                      originUrl: fileID,
+                      resUrl: {
+                        cut50: result[0],
+                        cut80: result[1],
+                        cut150: result[2]
+                      }
+                    })
+                  })
+              } else {
+                wx.showToast({
+                  title: '上传图片不规范，请重试',
+                  icon: 'none'
+                })
+              }
             })
           },
           fail: e => {
@@ -108,12 +100,10 @@ Page({
             wx.hideLoading()
           }
         })
-
       },
       fail: e => {
         console.error(e)
       }
     })
   },
-
 })
