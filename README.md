@@ -8,5 +8,8 @@
 - 前端展示效果
 
 ## 时序图
-
 - ![image](https://github.com/noletianhao-lee/hi-image-miniprogram/raw/master/image-test/时序图.png)
+
+## 后续
+- 云函数和pages/home代码已debug，还欠缺最后的优化
+- 时序图待修改
