@@ -1,5 +1,5 @@
 // 云函数入口文件、图像安全审核依赖
-const cloud = require('wx-server-sdk')
+// const cloud = require('wx-server-sdk')
 const extCi = require("@cloudbase/extension-ci")
 const tcb = require("tcb-admin-node")
 
